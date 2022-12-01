@@ -1,17 +1,24 @@
-radio.onReceivedNumber(function (receivedNumber) {
-    Facit = receivedNumber
-})
 function showQuestion () {
     basic.showLeds(`
         . . . . .
         . . . . .
-        . . . . .
+        . . # . .
         . . . . .
         . . . . .
         `)
     basic.pause(1000)
+    basic.clearScreen()
     basic.showString(Question)
-    basic.pause(500)
+    basic.pause(100)
+    basic.showLeds(`
+        . . . . .
+        . . . . .
+        . . # . .
+        . . . . .
+        . . . . .
+        `)
+    basic.pause(1000)
+    basic.clearScreen()
     basic.showString("?")
 }
 input.onButtonPressed(Button.A, function () {
@@ -19,32 +26,50 @@ input.onButtonPressed(Button.A, function () {
 })
 function testAnswer (Answer: number) {
     radio.sendValue("Answer", Answer)
-    if (Facit == Answer) {
+    if (Fasit == Answer) {
         basic.showIcon(IconNames.Yes)
-        basic.pause(500)
-        basic.showString("Riktig")
+        basic.pause(1000)
+        basic.clearScreen()
     } else {
-        basic.showIcon(IconNames.Sad)
-        basic.pause(500)
-        basic.showString("Feil")
+        basic.showIcon(IconNames.No)
+        basic.pause(1000)
+        basic.clearScreen()
     }
     basic.pause(2000)
     DisplayDayNumber(Today + 0)
 }
 radio.onReceivedString(function (receivedString) {
-    Question = receivedString
+    if (IsNewDay) {
+        QuestionPart = receivedString
+        Question = "" + Question + receivedString
+        if (Question.length == QuestionLength) {
+            basic.showIcon(IconNames.Yes)
+            basic.pause(500)
+            DisplayDayNumber(Today)
+        }
+    }
 })
 input.onButtonPressed(Button.B, function () {
     testAnswer(1)
-})
-input.onGesture(Gesture.Shake, function () {
-    showQuestion()
 })
 radio.onReceivedValue(function (name, value) {
     if (name == "Today") {
         if (Today != value) {
             Today = value
             DisplayDayNumber(Today)
+            IsNewDay = true
+        }
+    }
+    if (name == "Length") {
+        if (IsNewDay) {
+            QuestionLength = value
+            Question = ""
+        }
+    }
+    if (name == "Fasit") {
+        if (IsNewDay) {
+            IsNewDay = false
+            Fasit = value
         }
     }
 })
@@ -332,8 +357,13 @@ function DisplayDayNumber (num: number) {
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
     showQuestion()
 })
-let Today = 0
+let QuestionLength = 0
+let QuestionPart = ""
+let Fasit = 0
 let Question = ""
-let Facit = 0
+let IsNewDay = false
+let Today = 0
 radio.setGroup(24)
 led.setBrightness(50)
+Today = 0
+IsNewDay = false
